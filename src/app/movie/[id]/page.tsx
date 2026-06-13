@@ -1,28 +1,12 @@
 // src/app/movie/[id]/page.tsx
-// Movie detail page — shows movie info + similar movies
-// URL: /movie/9?title=Annihilation
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { search as searchApi } from "@/lib/api";
 import type { SearchResultItem } from "@/lib/types";
 import MovieCard from "@/components/MovieCard";
-
-const GENRE_COLORS: Record<string, string> = {
-  "Sci-Fi":   "bg-indigo-900/40 text-indigo-300 border-indigo-700/40",
-  "Horror":   "bg-red-900/40 text-red-300 border-red-700/40",
-  "Thriller": "bg-orange-900/40 text-orange-300 border-orange-700/40",
-  "Crime":    "bg-yellow-900/40 text-yellow-300 border-yellow-700/40",
-  "Drama":    "bg-purple-900/40 text-purple-300 border-purple-700/40",
-  "Action":   "bg-blue-900/40 text-blue-300 border-blue-700/40",
-  "Comedy":   "bg-green-900/40 text-green-300 border-green-700/40",
-};
-
-function genreColor(genre: string) {
-  return GENRE_COLORS[genre] ?? "bg-gray-800/40 text-gray-300 border-gray-700/40";
-}
 
 export default function MovieDetailPage() {
   const params = useParams();
@@ -30,6 +14,8 @@ export default function MovieDetailPage() {
 
   const movieId = Number(params.id);
   const title = searchParams.get("title") ?? "";
+  const fromSearch = searchParams.get("from") === "search";
+  const fromQuery = searchParams.get("q") ?? "";
 
   const [similar, setSimilar] = useState<SearchResultItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +23,6 @@ export default function MovieDetailPage() {
 
   useEffect(() => {
     if (!title || !movieId) return;
-
     setLoading(true);
     searchApi
       .similar(title, movieId, 6)
@@ -50,12 +35,41 @@ export default function MovieDetailPage() {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
         <p className="text-gray-500">Movie not found.</p>
+        <Link href="/" className="text-indigo-400 hover:text-indigo-300 text-sm mt-4 inline-block">
+          ← Back to browse
+        </Link>
       </div>
     );
   }
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
+
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 mb-6">
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-white transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Browse
+        </Link>
+        {fromSearch && fromQuery && (
+          <>
+            <span className="text-gray-700">/</span>
+            <Link
+              href={`/search?q=${encodeURIComponent(fromQuery)}`}
+              className="text-sm text-gray-500 hover:text-white transition-colors"
+            >
+              Search
+            </Link>
+          </>
+        )}
+        <span className="text-gray-700">/</span>
+        <span className="text-sm text-gray-400 truncate max-w-[200px]">{title}</span>
+      </div>
 
       {/* Movie header */}
       <div className="mb-10">

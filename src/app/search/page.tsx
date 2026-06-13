@@ -1,12 +1,10 @@
 // src/app/search/page.tsx
-// Semantic search page — reads ?q= from URL, fires POST /search
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { search as searchApi } from "@/lib/api";
-import { ApiError } from "@/lib/api";
+import Link from "next/link";
+import { search as searchApi, ApiError } from "@/lib/api";
 import type { SearchResultItem } from "@/lib/types";
 import MovieGrid from "@/components/MovieGrid";
 import SearchBar from "@/components/SearchBar";
@@ -28,10 +26,7 @@ export default function SearchPage() {
     setError("");
     setSearched(true);
     setQuery(q);
-
-    // update URL without navigation
     window.history.replaceState({}, "", `/search?q=${encodeURIComponent(q)}`);
-
     try {
       const res = await searchApi.byDescription(q, 12);
       setResults(res.results);
@@ -47,13 +42,27 @@ export default function SearchPage() {
     }
   }
 
-  // run search on initial load if ?q= is present
   useEffect(() => {
     if (initialQuery) runSearch(initialQuery);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 mb-6">
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-white transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Browse
+        </Link>
+        <span className="text-gray-700">/</span>
+        <span className="text-sm text-gray-400">Search</span>
+      </div>
 
       {/* Search bar */}
       <div className="max-w-2xl mb-8">
@@ -80,10 +89,8 @@ export default function SearchPage() {
         </p>
       )}
 
-      {/* Results */}
       <MovieGrid movies={results} showScore loading={loading} />
 
-      {/* Empty state before any search */}
       {!searched && !loading && (
         <div className="text-center py-20">
           <p className="text-gray-600 text-lg">Describe what you're in the mood for.</p>
